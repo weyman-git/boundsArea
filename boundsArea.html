@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>顶点编辑尝试</title>
+<style>
+
+.box{
+  width: 500px;
+  height: 500px;
+  background-color: #ccc;
+  margin: 100px auto;
+  position: relative;
+}
+.line{
+  height: 1px;
+  background-color: red;
+  position: absolute;
+  top: -1000px;
+  left: 0;
+  transform-origin: left center;
+  pointer-events: none;
+}
+.dot{
+  width: 8px;
+  height: 8px;
+  border: 1px solid red;
+  border-radius: 50%;
+  background-color: #fff;
+  position: absolute;
+  margin-left: -5px;
+  margin-top: -5px;
+  top: -1000px;
+  left: 0;
+  transform-origin: center center;
+  transition: transform .25s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.dot.close{
+  pointer-events: unset;
+}
+.dot.close:hover{
+  transform: scale(1.5);
+}
+</style>
+</head>
+<body>
+<div class="box" id="box"></div>
+<script src="https://cdnjs.gtimg.com/cdnjs/libs/zepto/1.1.4/zepto.min.js"></script>
+<script>
+
+var boundsArr = [];
+var index = -1;
+var box = document.getElementById('box');
+var activeLine = null;
+
+box.onclick = function(e){
+  
+  if($(e.target).hasClass('close')){ // 第一个顶点有class=close，点击第一个点闭合路径，完成编辑
+    $(e.target).removeClass('close');
+    box.onmousemove = null;
+    box.onclick = null;
+  }else{ // 否则继续增加顶点
+    index++;
+    boundsArr.push({x:e.offsetX, y:e.offsetY});
+    createDot(e.offsetX,e.offsetY);
+  }
+}
+
+// 监听鼠标移动，实时显示连线
+box.onmousemove = function(e){
+  if(index === -1) return false;
+  let p1 = boundsArr[index];
+  let p2 = null;
+
+  if($(e.target).hasClass('close')){
+    p2 = boundsArr[0];
+  }else{
+    p2 = {x:e.offsetX, y:e.offsetY}
+  }
+  let LA = getLengthAngle(p1.x, p1.y, p2.x, p2.y);
+  $(activeLine).css({
+    width: LA.length+'px',
+    transform: 'rotate('+LA.angle+'deg)'
+  })
+}
+
+// 创建顶点
+function createDot(x,y){
+  activeLine = document.createElement("div");
+  let cls = index === 0 ? 'close' : '';
+  $(activeLine).addClass("line")
+  .css({
+    top: y+'px',
+    left: x+'px'
+  })
+  let dot = `<div class="dot ${cls}" style="top: ${y}px;left: ${x}px"></div>`;
+  $(box).append(dot);
+  $(box).append(activeLine);
+}
+
+// 根据两点坐标获取连线长度和角度
+function getLengthAngle(x1, y1, x2, y2) {
+  var xDiff = x2 - x1,
+      yDiff = y2 - y1;
+  return {
+      length: Math.ceil(Math.sqrt(xDiff * xDiff + yDiff * yDiff)),
+      angle: Math.round((Math.atan2(yDiff, xDiff) * 180) / Math.PI)
+  };
+}
+
+
+
+</script>
+</body>
+</html>
